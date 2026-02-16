@@ -1,0 +1,810 @@
+﻿
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centro de Control - Google Forms</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+    :root {
+      --bg: #f4f7fb;
+      --bg-deep: #e6eefb;
+      --panel: #ffffffcc;
+      --panel-solid: #ffffff;
+      --ink: #102035;
+      --muted: #5a6a80;
+      --line: #d7e2f1;
+      --brand: #0a66df;
+      --brand2: #0a54b4;
+      --ok: #1f9d55;
+      --shadow: 0 10px 26px rgba(15, 46, 88, 0.09);
+      --radius: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #0d1420;
+      --bg-deep: #111c2d;
+      --panel: #162133cc;
+      --panel-solid: #162133;
+      --ink: #e6edf8;
+      --muted: #9bb0ca;
+      --line: #2b3b52;
+      --brand: #3b82f6;
+      --brand2: #1d5fcc;
+      --ok: #5fd69a;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
+    }
+    * { box-sizing: border-box; }
+    html, body { transition: background .3s ease, color .3s ease; }
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% -10%, #d7e7ff 0%, transparent 34%),
+        radial-gradient(circle at 110% 0%, #deecff 0%, transparent 30%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+      min-height: 100vh;
+    }
+    .shell { width: min(1320px, 94%); margin: 24px auto 44px; display: grid; gap: 16px; }
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      animation: riseIn .45s ease both;
+    }
+    .shell > .card:nth-child(2){animation-delay:.04s}.shell>.card:nth-child(3){animation-delay:.08s}.shell>.card:nth-child(4){animation-delay:.12s}.shell>.card:nth-child(5){animation-delay:.16s}
+    .top { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+    .title { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); margin: 7px 0 0; font-size: 0.94rem; max-width: 80ch; }
+    .auth-grid, .conn-grid, .filter-grid, .settings-grid { display: grid; gap: 10px; }
+    .section-label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #6d809a;
+      font-weight: 800;
+      margin-top: 14px;
+    }
+    .auth-grid { grid-template-columns: 1fr 1fr auto; margin-top: 14px; }
+    .conn-grid { grid-template-columns: 1fr auto auto; margin-top: 10px; }
+    .filter-grid { grid-template-columns: 1.2fr 190px 1fr 170px 170px auto auto; margin-top: 10px; }
+    .settings-grid { grid-template-columns: 1fr 170px auto; margin-top: 12px; }
+    .report-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+    input, select, button, textarea {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      background: var(--panel-solid);
+      color: var(--ink);
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    input::placeholder, textarea::placeholder { color: #8ca0b8; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #97bcf5;
+      box-shadow: 0 0 0 3px #d8e8ff;
+    }
+    button {
+      cursor: pointer;
+      background: linear-gradient(180deg, var(--brand), var(--brand2));
+      border-color: transparent;
+      color: #fff;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: transform .12s ease, filter .2s ease;
+    }
+    button:hover { filter: brightness(1.04); transform: translateY(-1px); }
+    button.ghost {
+      background: #f5f9ff;
+      color: #1f4c8f;
+      border-color: #c9dcf8;
+    }
+    .theme-switch {
+      position: relative;
+      width: 78px;
+      height: 38px;
+      padding: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+      background: #eef4ff;
+      border: 1px solid #c8d9f2;
+      color: #47658f;
+    }
+    .theme-switch .sun,
+    .theme-switch .moon {
+      width: 50%;
+      text-align: center;
+      font-size: 14px;
+      z-index: 1;
+      line-height: 1;
+      user-select: none;
+    }
+    .theme-switch .thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(19, 47, 86, 0.18);
+      transition: transform .22s ease;
+    }
+    [data-theme="dark"] .theme-switch .thumb {
+      transform: translateX(40px);
+    }
+    button.danger {
+      background: #fff1f4;
+      color: #9f1239;
+      border-color: #fccad6;
+    }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .status { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    .status strong { color: var(--ok); }
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #cdddf4;
+      background: #f7fbff;
+      font-size: .76rem;
+      font-weight: 700;
+      color: #2f517f;
+    }
+    .kpis { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; }
+    .kpi {
+      border: 1px solid #dce7f5;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      padding: 12px;
+    }
+    .kpi .k { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    .kpi .v { font-size: 1.2rem; font-weight: 800; margin-top: 5px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .chart-wrap { height: 300px; position: relative; padding: 2px; }
+    .table-wrap {
+      overflow: auto;
+      max-height: 62vh;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-top: 10px;
+      background: var(--panel-solid);
+    }
+    table { width: 100%; min-width: 860px; border-collapse: collapse; background: #fff; }
+    th, td { border-bottom: 1px solid #e5edf8; padding: 10px; font-size: .9rem; text-align: left; vertical-align: top; }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #edf5ff;
+      color: #2a4467;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    tr:hover td { background: #f8fbff; }
+    .status-chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; font-size: .75rem; display: inline-block; text-transform: capitalize; font-weight: 700; }
+    .s-pendiente{background:#fff7ed;color:#9a3412;border-color:#fed7aa}.s-revisado{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.s-aprobado{background:#ecfdf3;color:#166534;border-color:#bbf7d0}.s-rechazado{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .pagination { margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .mobile-cards { display: none; gap: 10px; margin-top: 10px; }
+    .mcard { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #fbfdff; }
+    .mitem { font-size: .83rem; color: var(--muted); margin-top: 3px; }
+    .modal { position: fixed; inset: 0; background: rgba(8,20,40,.52); display: none; align-items: center; justify-content: center; z-index: 20; padding: 14px; }
+    .modal.show { display: flex; }
+    .modal-box {
+      width: min(780px, 96vw);
+      max-height: 90vh;
+      overflow: auto;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 20px 50px rgba(8, 26, 55, .24);
+    }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { border: 1px solid #dfe9f8; border-radius: 10px; padding: 9px; background: #fafcff; }
+    .field .k { font-size: .75rem; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    .audit-wrap { max-height: 240px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; margin-top: 8px; background: #fff; }
+    .toast { position: fixed; right: 14px; bottom: 14px; background: #08294d; color: #fff; padding: 10px 12px; border-radius: 10px; display: none; z-index: 25; font-size: .9rem; box-shadow: 0 8px 20px rgba(3, 18, 44, .3); }
+    .toast.show { display: block; }
+    strong { font-weight: 800; }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    [data-theme="dark"] .section-label { color: #9ab0ce; }
+    [data-theme="dark"] .badge { background: #142033; border-color: #30435f; color: #bed0e7; }
+    [data-theme="dark"] .kpi { background: linear-gradient(180deg, #1b2a42, #152137); border-color: #304461; }
+    [data-theme="dark"] .table-wrap, [data-theme="dark"] .audit-wrap { background: #162133; }
+    [data-theme="dark"] table { background: #162133; }
+    [data-theme="dark"] th { background: #1a2b44; color: #bdd0eb; border-bottom-color: #324763; }
+    [data-theme="dark"] td { border-bottom-color: #2a3c57; }
+    [data-theme="dark"] tr:hover td { background: #1b2a42; }
+    [data-theme="dark"] .field { background: #18263b; border-color: #314764; }
+    [data-theme="dark"] button.ghost { background: #1a2a42; color: #c4d7f0; border-color: #395273; }
+    [data-theme="dark"] button.danger { background: #351f2b; border-color: #6e3a54; color: #ffbfd4; }
+    [data-theme="dark"] .theme-switch { background: #18283f; border-color: #324a6c; color: #c8daf2; }
+    [data-theme="dark"] .theme-switch .thumb { background: #dbe8ff; }
+    @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
+    @media (max-width:1080px){.top{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(150px,1fr))}.grid2{grid-template-columns:1fr}.filter-grid{grid-template-columns:1fr 1fr}}
+    @media (max-width:760px){.auth-grid,.conn-grid,.filter-grid,.settings-grid{grid-template-columns:1fr}.table-wrap{display:none}.mobile-cards{display:grid}.kpis{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}.title{font-size:1.35rem}}
+    @media print {.no-print{display:none!important} body{background:#fff} .card{box-shadow:none;backdrop-filter:none} .table-wrap{max-height:none} table{min-width:0}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="card top no-print">
+      <div>
+        <h1 class="title">Centro de Control de Formularios</h1>
+        <p class="sub">Panel completo para Google Forms con analitica, seguimiento operativo y control por roles.</p>
+        <div class="section-label">Acceso</div>
+        <div class="auth-grid">
+          <input id="userName" placeholder="Usuario" />
+          <input id="tokenInput" type="password" placeholder="Token de acceso" />
+          <button id="loginBtn">Iniciar sesion</button>
+        </div>
+        <div class="section-label">Conexion</div>
+        <div class="conn-grid">
+          <input id="apiUrl" type="url" placeholder="URL Web App Apps Script" />
+          <button id="saveUrlBtn">Guardar URL</button>
+          <button id="syncBtn" class="ghost">Sincronizar</button>
+        </div>
+        <div class="section-label">Filtros</div>
+        <div class="filter-grid">
+          <input id="globalSearch" placeholder="Busqueda global..." />
+          <select id="columnSelect"></select>
+          <input id="columnValue" placeholder="Filtro por columna" />
+          <input id="fromDate" type="date" />
+          <input id="toDate" type="date" />
+          <button id="savePresetBtn" class="ghost">Guardar filtro</button>
+          <button id="clearFiltersBtn" class="ghost">Limpiar</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <label class="row"><input id="onlyEmptyChk" type="checkbox" /> Solo con campos vacios</label>
+          <label class="row"><input id="notifyChk" type="checkbox" checked /> Alertas nuevas respuestas</label>
+          <select id="presetSelect" style="min-width:200px;"></select>
+          <button id="applyPresetBtn" class="ghost">Aplicar preset</button>
+          <button id="deletePresetBtn" class="danger">Borrar preset</button>
+        </div>
+        <div id="status" class="status">Estado: pendiente.</div>
+      </div>
+      <aside class="card" style="margin:0;">
+        <strong>Sesion</strong>
+        <div class="row" style="margin-top:8px;">
+          <span class="badge" id="sessionRole">rol: none</span>
+          <span class="badge" id="sessionUser">usuario: -</span>
+        </div>
+        <div class="settings-grid" style="margin-top:10px;">
+          <input id="responseSheetName" placeholder="Hoja respuestas (admin)" />
+          <input id="pollMs" type="number" min="2000" step="1000" value="10000" />
+          <button id="saveSettingsBtn" class="ghost">Guardar ajustes</button>
+        </div>
+        <div class="section-label" style="margin-top:10px;">Reporte</div>
+        <div class="report-grid">
+          <input id="reportInstitution" placeholder="Institucion para reporte" />
+          <input id="reportTitle" placeholder="Titulo del reporte" />
+          <input id="reportLogo" placeholder="URL del logo (opcional)" />
+          <button id="saveReportConfigBtn" class="ghost">Guardar reporte</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button id="exportCsvBtn" class="ghost">CSV</button>
+          <button id="exportXlsBtn" class="ghost">Excel</button>
+          <button id="exportPdfBtn" class="ghost">PDF</button>
+          <button id="themeToggleBtn" class="theme-switch" aria-label="Cambiar tema" title="Cambiar tema">
+            <span class="sun">☀</span>
+            <span class="moon">🌙</span>
+            <span class="thumb" aria-hidden="true"></span>
+          </button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card">
+      <div class="kpis">
+        <article class="kpi"><div class="k">Total BD</div><div id="kpiTotal" class="v">0</div></article>
+        <article class="kpi"><div class="k">Visibles</div><div id="kpiVisible" class="v">0</div></article>
+        <article class="kpi"><div class="k">Pendientes</div><div id="kpiPendiente" class="v">0</div></article>
+        <article class="kpi"><div class="k">Aprobados</div><div id="kpiAprobado" class="v">0</div></article>
+        <article class="kpi"><div class="k">Ultima Sync</div><div id="kpiSync" class="v" style="font-size:.92rem;">-</div></article>
+      </div>
+    </section>
+
+    <section class="card grid2">
+      <div>
+        <div class="row no-print" style="margin-bottom:8px;"><strong>Grafico por pregunta</strong><select id="chartColumn"></select></div>
+        <div class="chart-wrap"><canvas id="chartCategory"></canvas></div>
+      </div>
+      <div>
+        <strong>Respuestas por dia</strong>
+        <div class="chart-wrap"><canvas id="chartTimeline"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row no-print"><strong>Respuestas</strong><label class="row">Filas por pagina<select id="pageSize"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option></select></label></div>
+      <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+      <div id="mobileCards" class="mobile-cards"></div>
+      <div class="pagination no-print"><button id="prevBtn" class="ghost">Anterior</button><span id="pageInfo">Pagina 1 de 1</span><button id="nextBtn" class="ghost">Siguiente</button></div>
+    </section>
+
+    <section class="card no-print">
+      <strong>Auditoria</strong>
+      <div class="audit-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Usuario</th><th>Accion</th><th>RowId</th><th>Estado</th><th>Nota</th></tr></thead>
+          <tbody id="auditBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="detailModal" class="modal">
+    <div class="modal-box">
+      <div class="row" style="justify-content:space-between;"><strong>Detalle de respuesta</strong><button id="closeModalBtn" class="ghost">Cerrar</button></div>
+      <div id="detailGrid" class="modal-grid" style="margin-top:10px;"></div>
+      <div class="row" style="margin-top:10px;"><select id="detailStatus"><option value="pendiente">pendiente</option><option value="revisado">revisado</option><option value="aprobado">aprobado</option><option value="rechazado">rechazado</option></select><input id="detailUpdatedBy" disabled /><input id="detailUpdatedAt" disabled /></div>
+      <div style="margin-top:8px;"><textarea id="detailNote" placeholder="Nota interna..."></textarea></div>
+      <div class="row" style="margin-top:10px;"><button id="saveMetaBtn">Guardar estado/nota</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORE = { apiUrl:"forms_api_url", token:"forms_token", user:"forms_user", pollMs:"forms_poll_ms", presets:"forms_filter_presets", theme:"forms_theme" };
+    const state = { role:"none", apiUrl:"", token:"", user:"", pollMs:10000, headers:[], rows:[], filteredRows:[], page:1, pageSize:20, pollTimer:null, detailRow:null, chartA:null, chartB:null, responseSheetName:"" };
+    const el = {
+      userName:document.getElementById("userName"), tokenInput:document.getElementById("tokenInput"), loginBtn:document.getElementById("loginBtn"),
+      apiUrl:document.getElementById("apiUrl"), saveUrlBtn:document.getElementById("saveUrlBtn"), syncBtn:document.getElementById("syncBtn"),
+      globalSearch:document.getElementById("globalSearch"), columnSelect:document.getElementById("columnSelect"), columnValue:document.getElementById("columnValue"),
+      fromDate:document.getElementById("fromDate"), toDate:document.getElementById("toDate"), onlyEmptyChk:document.getElementById("onlyEmptyChk"), notifyChk:document.getElementById("notifyChk"),
+      presetSelect:document.getElementById("presetSelect"), savePresetBtn:document.getElementById("savePresetBtn"), applyPresetBtn:document.getElementById("applyPresetBtn"), deletePresetBtn:document.getElementById("deletePresetBtn"), clearFiltersBtn:document.getElementById("clearFiltersBtn"),
+      status:document.getElementById("status"), sessionRole:document.getElementById("sessionRole"), sessionUser:document.getElementById("sessionUser"), responseSheetName:document.getElementById("responseSheetName"), pollMs:document.getElementById("pollMs"), saveSettingsBtn:document.getElementById("saveSettingsBtn"),
+      reportInstitution:document.getElementById("reportInstitution"), reportTitle:document.getElementById("reportTitle"), reportLogo:document.getElementById("reportLogo"), saveReportConfigBtn:document.getElementById("saveReportConfigBtn"),
+      exportCsvBtn:document.getElementById("exportCsvBtn"), exportXlsBtn:document.getElementById("exportXlsBtn"), exportPdfBtn:document.getElementById("exportPdfBtn"), themeToggleBtn:document.getElementById("themeToggleBtn"),
+      kpiTotal:document.getElementById("kpiTotal"), kpiVisible:document.getElementById("kpiVisible"), kpiPendiente:document.getElementById("kpiPendiente"), kpiAprobado:document.getElementById("kpiAprobado"), kpiSync:document.getElementById("kpiSync"),
+      chartColumn:document.getElementById("chartColumn"), chartCategory:document.getElementById("chartCategory"), chartTimeline:document.getElementById("chartTimeline"),
+      pageSize:document.getElementById("pageSize"), prevBtn:document.getElementById("prevBtn"), nextBtn:document.getElementById("nextBtn"), pageInfo:document.getElementById("pageInfo"),
+      thead:document.getElementById("thead"), tbody:document.getElementById("tbody"), mobileCards:document.getElementById("mobileCards"), auditBody:document.getElementById("auditBody"),
+      detailModal:document.getElementById("detailModal"), detailGrid:document.getElementById("detailGrid"), detailStatus:document.getElementById("detailStatus"), detailUpdatedBy:document.getElementById("detailUpdatedBy"), detailUpdatedAt:document.getElementById("detailUpdatedAt"), detailNote:document.getElementById("detailNote"), saveMetaBtn:document.getElementById("saveMetaBtn"), closeModalBtn:document.getElementById("closeModalBtn"),
+      toast:document.getElementById("toast")
+    };
+
+    function setStatus(msg, ok=false){ el.status.innerHTML = `Estado: ${ok?"<strong>"+msg+"</strong>":msg}`; }
+    function showToast(msg){ el.toast.textContent=msg; el.toast.classList.add("show"); setTimeout(()=>el.toast.classList.remove("show"),2800); }
+    function safeDate(v){ const d=new Date(v); return Number.isNaN(d.getTime())?null:d; }
+    function fmtDate(v){ const d=safeDate(v); return d?d.toLocaleString():String(v||"-"); }
+    function esc(t){ return String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;"); }
+    function applyTheme(theme){
+      const next = theme === "dark" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem(STORE.theme, next);
+      if (el.themeToggleBtn) {
+        el.themeToggleBtn.setAttribute("aria-pressed", next === "dark" ? "true" : "false");
+      }
+    }
+    function toggleTheme(){
+      const current = document.documentElement.getAttribute("data-theme") || "light";
+      applyTheme(current === "dark" ? "light" : "dark");
+    }
+
+    function getPresets(){ try{return JSON.parse(localStorage.getItem(STORE.presets)||"[]");}catch{return [];} }
+    function setPresets(list){ localStorage.setItem(STORE.presets, JSON.stringify(list)); }
+    function refreshPresetSelect(){ const presets=getPresets(); el.presetSelect.innerHTML="<option value=''>Presets guardados...</option>"; presets.forEach((p,i)=>{ const o=document.createElement("option"); o.value=String(i); o.textContent=p.name; el.presetSelect.appendChild(o); }); }
+    function serializeFilters(){ return {globalSearch:el.globalSearch.value,columnIndex:el.columnSelect.value,columnValue:el.columnValue.value,fromDate:el.fromDate.value,toDate:el.toDate.value,onlyEmpty:el.onlyEmptyChk.checked}; }
+    function applySerializedFilters(f){ el.globalSearch.value=f.globalSearch||""; el.columnSelect.value=f.columnIndex||""; el.columnValue.value=f.columnValue||""; el.fromDate.value=f.fromDate||""; el.toDate.value=f.toDate||""; el.onlyEmptyChk.checked=!!f.onlyEmpty; applyFilters(true); }
+
+    function updateSessionUi(){
+      el.sessionRole.textContent=`rol: ${state.role}`;
+      el.sessionUser.textContent=`usuario: ${state.user||"-"}`;
+      const canEdit=state.role==="admin"||state.role==="editor";
+      const isAdmin=state.role==="admin";
+      el.saveMetaBtn.disabled=!canEdit;
+      el.saveSettingsBtn.disabled=!isAdmin;
+      el.responseSheetName.disabled=!isAdmin;
+    }
+
+    function buildApiUrl(action,extra={}){ const u=new URL(state.apiUrl); u.searchParams.set("action",action); if(state.token)u.searchParams.set("token",state.token); Object.keys(extra).forEach(k=>u.searchParams.set(k,extra[k])); return u.toString(); }
+    function apiGetJsonp(action, extra = {}) {
+      return new Promise((resolve, reject) => {
+        const cb = `__formsCb_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+        const url = new URL(buildApiUrl(action, extra));
+        url.searchParams.set("callback", cb);
+
+        const script = document.createElement("script");
+        const cleanup = () => {
+          try { delete window[cb]; } catch {}
+          if (script.parentNode) script.parentNode.removeChild(script);
+        };
+
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("JSONP timeout"));
+        }, 12000);
+
+        window[cb] = (data) => {
+          clearTimeout(timeout);
+          cleanup();
+          resolve(data);
+        };
+
+        script.onerror = () => {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error("JSONP error"));
+        };
+
+        script.src = url.toString();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function apiGet(action,extra={}){
+      try {
+        const r=await fetch(buildApiUrl(action,extra),{method:"GET"});
+        if(!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      } catch (err) {
+        return apiGetJsonp(action, extra);
+      }
+    }
+    async function apiPost(payload){ const r=await fetch(state.apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,token:state.token})}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }
+
+    async function verifyLogin(){
+      if(!state.apiUrl){ setStatus("primero guarda la URL de la API."); return; }
+      state.token=el.tokenInput.value.trim();
+      state.user=el.userName.value.trim()||"usuario";
+      localStorage.setItem(STORE.token,state.token);
+      localStorage.setItem(STORE.user,state.user);
+      try{
+        const res=await apiGet("verify");
+        if(!res.ok){ state.role="none"; updateSessionUi(); setStatus(res.message||"token invalido."); return; }
+        state.role=res.role; updateSessionUi(); setStatus(`sesion iniciada (${state.role}).`,true);
+        await loadConfig(); await fetchData(); await fetchAudit(); startPolling();
+      }catch(err){ setStatus(`error de login: ${err.message}`); }
+    }
+
+    async function loadConfig(){ try{ const res=await apiGet("config"); if(res.ok&&res.config){ state.responseSheetName=res.config.responseSheetName||""; el.responseSheetName.value=state.responseSheetName; } }catch{} }
+    function timestampColIndex(){ return state.headers.findIndex(h=>{ const n=String(h||"").toLowerCase(); return n.includes("timestamp")||n.includes("marca temporal")||n.includes("fecha"); }); }
+
+    function applyFilters(resetPage){
+      const search=el.globalSearch.value.trim().toLowerCase();
+      const colIdx=Number(el.columnSelect.value||-1);
+      const colVal=el.columnValue.value.trim().toLowerCase();
+      const from=el.fromDate.value?new Date(el.fromDate.value+"T00:00:00"):null;
+      const to=el.toDate.value?new Date(el.toDate.value+"T23:59:59"):null;
+      const onlyEmpty=el.onlyEmptyChk.checked;
+      const tIdx=timestampColIndex();
+      state.filteredRows=state.rows.filter(row=>{
+        const full=(row.cells.join(" | ")+" | "+row.meta.status+" | "+row.meta.note).toLowerCase();
+        const searchOk=!search||full.includes(search);
+        let colOk=true; if(colIdx>=0&&colVal) colOk=String(row.cells[colIdx]||"").toLowerCase().includes(colVal);
+        let dateOk=true; if((from||to)&&tIdx>=0){ const d=safeDate(row.cells[tIdx]); if(!d) dateOk=false; if(from&&d&&d<from) dateOk=false; if(to&&d&&d>to) dateOk=false; }
+        const emptyOk=!onlyEmpty||row.cells.some(c=>!String(c||"").trim());
+        return searchOk&&colOk&&dateOk&&emptyOk;
+      });
+      if(resetPage) state.page=1;
+      renderKPIs(); renderPage(); renderCharts();
+    }
+    function totalPages(){ return Math.max(1,Math.ceil(state.filteredRows.length/state.pageSize)); }
+    function rowStatusChip(status){ const s=(status||"pendiente").toLowerCase(); return `<span class='status-chip s-${esc(s)}'>${esc(s)}</span>`; }
+
+    function renderPage(){
+      const pages=totalPages();
+      if(state.page>pages) state.page=pages;
+      if(state.page<1) state.page=1;
+      const start=(state.page-1)*state.pageSize;
+      const slice=state.filteredRows.slice(start,start+state.pageSize);
+      el.thead.innerHTML=""; el.tbody.innerHTML=""; el.mobileCards.innerHTML="";
+      if(!state.headers.length){ el.thead.innerHTML="<tr><th>Sin encabezados</th></tr>"; el.tbody.innerHTML="<tr><td>Sin datos</td></tr>"; el.pageInfo.textContent="Pagina 1 de 1"; return; }
+
+      const head=document.createElement("tr");
+      state.headers.forEach(h=>{ const th=document.createElement("th"); th.textContent=h; head.appendChild(th); });
+      ["Estado","Nota","Actualizado por","Actualizado en","Accion"].forEach(h=>{ const th=document.createElement("th"); th.textContent=h; head.appendChild(th); });
+      el.thead.appendChild(head);
+
+      if(!slice.length) el.tbody.innerHTML=`<tr><td colspan='${state.headers.length+5}'>No hay filas para este filtro.</td></tr>`;
+
+      slice.forEach(row=>{
+        const tr=document.createElement("tr");
+        row.cells.forEach(c=>{ const td=document.createElement("td"); td.textContent=c; tr.appendChild(td); });
+        const tdStatus=document.createElement("td"); tdStatus.innerHTML=rowStatusChip(row.meta.status); tr.appendChild(tdStatus);
+        const tdNote=document.createElement("td"); tdNote.textContent=row.meta.note||""; tr.appendChild(tdNote);
+        const tdBy=document.createElement("td"); tdBy.textContent=row.meta.updatedBy||""; tr.appendChild(tdBy);
+        const tdAt=document.createElement("td"); tdAt.textContent=row.meta.updatedAt||""; tr.appendChild(tdAt);
+        const tdAct=document.createElement("td"); const btn=document.createElement("button"); btn.className="ghost"; btn.textContent="Detalle"; btn.addEventListener("click",()=>openDetail(row)); tdAct.appendChild(btn); tr.appendChild(tdAct);
+        el.tbody.appendChild(tr);
+
+        const card=document.createElement("article"); card.className="mcard";
+        card.innerHTML=`<h4>Row #${row.rowId}</h4><div class='mitem'>${rowStatusChip(row.meta.status)}</div><div class='mitem'>${esc(state.headers[0]||"Campo 1")}: ${esc(row.cells[0]||"")}</div><div class='mitem'>${esc(state.headers[1]||"Campo 2")}: ${esc(row.cells[1]||"")}</div><div class='mitem'>Nota: ${esc(row.meta.note||"")}</div>`;
+        const openBtn=document.createElement("button"); openBtn.className="ghost"; openBtn.textContent="Abrir"; openBtn.style.marginTop="8px"; openBtn.addEventListener("click",()=>openDetail(row));
+        card.appendChild(openBtn); el.mobileCards.appendChild(card);
+      });
+
+      el.pageInfo.textContent=`Pagina ${state.page} de ${pages}`;
+      el.prevBtn.disabled=state.page<=1; el.nextBtn.disabled=state.page>=pages;
+    }
+
+    function renderKPIs(){
+      const pending=state.rows.filter(r=>(r.meta.status||"pendiente")==="pendiente").length;
+      const approved=state.rows.filter(r=>(r.meta.status||"")==="aprobado").length;
+      el.kpiTotal.textContent=String(state.rows.length);
+      el.kpiVisible.textContent=String(state.filteredRows.length);
+      el.kpiPendiente.textContent=String(pending);
+      el.kpiAprobado.textContent=String(approved);
+      el.kpiSync.textContent=fmtDate(new Date());
+    }
+
+    function populateColumnSelectors(){
+      el.columnSelect.innerHTML="<option value=''>Columna...</option>";
+      el.chartColumn.innerHTML="";
+      state.headers.forEach((h,i)=>{
+        const a=document.createElement("option"); a.value=String(i); a.textContent=h; el.columnSelect.appendChild(a);
+        const b=document.createElement("option"); b.value=String(i); b.textContent=h; el.chartColumn.appendChild(b);
+      });
+      const tIdx=timestampColIndex();
+      if(state.headers.length){ const pick=tIdx===0?1:0; if(pick>=0&&pick<state.headers.length) el.chartColumn.value=String(pick); }
+    }
+
+    function renderCharts(){
+      if(!window.Chart) return;
+      const idx=Number(el.chartColumn.value||0);
+      const values=state.filteredRows.map(r=>String(r.cells[idx]||"(vacio)").trim()||"(vacio)");
+      const counter={}; values.forEach(v=>counter[v]=(counter[v]||0)+1);
+      const pairs=Object.entries(counter).sort((a,b)=>b[1]-a[1]).slice(0,12);
+      if(state.chartA) state.chartA.destroy();
+      state.chartA=new Chart(el.chartCategory,{type:"bar",data:{labels:pairs.map(x=>x[0]),datasets:[{label:"Cantidad",data:pairs.map(x=>x[1]),backgroundColor:"#3b82f6"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+
+      const tIdx=timestampColIndex();
+      const byDay={};
+      if(tIdx>=0){
+        state.filteredRows.forEach(r=>{ const d=safeDate(r.cells[tIdx]); if(!d) return; const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; byDay[key]=(byDay[key]||0)+1; });
+      }
+      const days=Object.keys(byDay).sort();
+      if(state.chartB) state.chartB.destroy();
+      state.chartB=new Chart(el.chartTimeline,{type:"line",data:{labels:days,datasets:[{label:"Respuestas",data:days.map(d=>byDay[d]),borderColor:"#0ea5e9",backgroundColor:"rgba(14,165,233,0.2)",fill:true,tension:.25}]},options:{responsive:true,maintainAspectRatio:false}});
+    }
+
+    function openDetail(row){
+      state.detailRow=row;
+      el.detailGrid.innerHTML="";
+      state.headers.forEach((h,i)=>{ const div=document.createElement("div"); div.className="field"; div.innerHTML=`<span class='k'>${esc(h)}</span>${esc(row.cells[i])}`; el.detailGrid.appendChild(div); });
+      el.detailStatus.value=row.meta.status||"pendiente";
+      el.detailUpdatedBy.value=row.meta.updatedBy||"";
+      el.detailUpdatedAt.value=row.meta.updatedAt||"";
+      el.detailNote.value=row.meta.note||"";
+      const canEdit=state.role==="admin"||state.role==="editor";
+      el.detailStatus.disabled=!canEdit; el.detailNote.disabled=!canEdit; el.saveMetaBtn.disabled=!canEdit;
+      el.detailModal.classList.add("show");
+    }
+
+    function closeDetail(){ el.detailModal.classList.remove("show"); state.detailRow=null; }
+
+    async function saveMeta(){
+      if(!state.detailRow) return;
+      if(!(state.role==="admin"||state.role==="editor")) return;
+      try{
+        const res=await apiPost({action:"update_meta",rowId:state.detailRow.rowId,status:el.detailStatus.value,note:el.detailNote.value,user:state.user||"usuario"});
+        if(!res.ok){ setStatus(res.error||"no se pudo guardar."); return; }
+        setStatus("estado y nota guardados.",true);
+        closeDetail(); await fetchData(true); await fetchAudit();
+      }catch(err){ setStatus(`error guardando: ${err.message}`); }
+    }
+    async function fetchAudit(){
+      if(!state.apiUrl||state.role==="none") return;
+      try{
+        const res=await apiGet("audit",{limit:"60"});
+        if(!res.ok||!Array.isArray(res.logs)) return;
+        el.auditBody.innerHTML="";
+        res.logs.forEach(log=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML=`<td>${esc(log.at)}</td><td>${esc(log.user)}</td><td>${esc(log.action)}</td><td>${esc(String(log.rowId))}</td><td>${esc(log.oldStatus)} -> ${esc(log.newStatus)}</td><td>${esc(log.oldNote)} -> ${esc(log.newNote)}</td>`;
+          el.auditBody.appendChild(tr);
+        });
+      }catch{}
+    }
+
+    function notifyNew(count){
+      if(!el.notifyChk.checked||count<=0) return;
+      showToast(`Entraron ${count} respuesta(s) nuevas.`);
+      if("Notification" in window){
+        if(Notification.permission==="granted") new Notification("Google Forms",{body:`Tienes ${count} respuesta(s) nueva(s).`});
+        else if(Notification.permission==="default") Notification.requestPermission();
+      }
+    }
+
+    async function fetchData(silent){
+      if(!state.apiUrl){ if(!silent) setStatus("pega la URL de la API."); return; }
+      try{
+        if(!silent) setStatus("sincronizando...");
+        const res=await apiGet("data");
+        if(!res.ok){ setStatus(res.error||"error de API."); return; }
+        const prevTotal=state.rows.length;
+        state.role=res.role||state.role;
+        updateSessionUi();
+        state.headers=Array.isArray(res.headers)?res.headers:[];
+        state.rows=Array.isArray(res.rows)?res.rows:[];
+        if(prevTotal&&state.rows.length>prevTotal) notifyNew(state.rows.length-prevTotal);
+        populateColumnSelectors();
+        applyFilters(false);
+        setStatus("datos actualizados.",true);
+      }catch(err){ setStatus(`fallo de conexion: ${err.message}`); }
+    }
+
+    function startPolling(){ if(state.pollTimer) clearInterval(state.pollTimer); state.pollTimer=setInterval(()=>fetchData(true),state.pollMs); }
+
+    function saveUrl(){
+      const v=el.apiUrl.value.trim();
+      if(!v){ setStatus("URL invalida."); return; }
+      try{ new URL(v); }catch{ setStatus("URL invalida."); return; }
+      state.apiUrl=v;
+      localStorage.setItem(STORE.apiUrl,v);
+      setStatus("URL guardada.",true);
+    }
+
+    async function saveSettings(){
+      state.pollMs=Math.max(2000,Number(el.pollMs.value||10000));
+      localStorage.setItem(STORE.pollMs,String(state.pollMs));
+      startPolling();
+      if(state.role!=="admin"){ setStatus("intervalo guardado localmente.",true); return; }
+      try{
+        const res=await apiPost({action:"set_config",responseSheetName:el.responseSheetName.value.trim()||state.responseSheetName});
+        if(!res.ok){ setStatus(res.error||"no se pudo guardar config."); return; }
+        setStatus("ajustes guardados (admin).",true);
+        await fetchData(true);
+      }catch(err){ setStatus(`error guardando ajustes: ${err.message}`); }
+    }
+
+    function saveReportConfig(){
+      localStorage.setItem("forms_report_institution", el.reportInstitution.value.trim() || "Universidad de Panama");
+      localStorage.setItem("forms_report_title", el.reportTitle.value.trim() || "Reporte Interactivo de Respuestas");
+      localStorage.setItem("forms_report_logo", el.reportLogo.value.trim());
+      showToast("Configuracion de reporte guardada.");
+    }
+
+    function clearFilters(){ el.globalSearch.value=""; el.columnSelect.value=""; el.columnValue.value=""; el.fromDate.value=""; el.toDate.value=""; el.onlyEmptyChk.checked=false; applyFilters(true); }
+    function savePreset(){ const name=prompt("Nombre del preset:"); if(!name) return; const presets=getPresets(); presets.push({name,filters:serializeFilters()}); setPresets(presets); refreshPresetSelect(); showToast("Preset guardado."); }
+    function applyPreset(){ const idx=Number(el.presetSelect.value); if(Number.isNaN(idx)) return; const presets=getPresets(); if(!presets[idx]) return; applySerializedFilters(presets[idx].filters); }
+    function deletePreset(){ const idx=Number(el.presetSelect.value); if(Number.isNaN(idx)) return; const presets=getPresets(); if(!presets[idx]) return; presets.splice(idx,1); setPresets(presets); refreshPresetSelect(); showToast("Preset eliminado."); }
+
+    function csvEscape(v){ const s=String(v==null?"":v); if(s.includes('"')||s.includes(",")||s.includes("\n")) return '"'+s.replace(/"/g,'""')+'"'; return s; }
+    function downloadBlob(type,filename,content){ const blob=new Blob([content],{type}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+    function exportCsv(){ const headers=[...state.headers,"Estado","Nota","ActualizadoPor","ActualizadoEn","RowId"]; const lines=[headers.map(csvEscape).join(",")]; state.filteredRows.forEach(r=>lines.push([...r.cells,r.meta.status,r.meta.note,r.meta.updatedBy,r.meta.updatedAt,r.rowId].map(csvEscape).join(","))); downloadBlob("text/csv;charset=utf-8;","respuestas.csv","\uFEFF"+lines.join("\n")); }
+    function reportStyles(){
+      return `<style>
+        body{font-family:Segoe UI,Arial,sans-serif;background:#f2f7ff;color:#0f223b;margin:0;padding:18px}
+        .cover{background:#fff;border:1px solid #d8e5f9;border-radius:14px;padding:20px;margin-bottom:14px;text-align:center}
+        .logo{max-height:76px;max-width:220px;object-fit:contain;margin:0 auto 8px auto;display:block}
+        .inst{font-size:20px;font-weight:700;margin:4px 0}
+        .rep-title{font-size:14px;color:#4f6380;margin:2px 0 0 0}
+        .head{background:linear-gradient(135deg,#0a66df,#0c4aa4);color:#fff;border-radius:14px;padding:18px}
+        .sub{opacity:.9;font-size:13px}
+        .grid{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;margin:14px 0}
+        .k{background:#fff;border:1px solid #d8e5f9;border-radius:12px;padding:10px}
+        .k .t{font-size:11px;color:#5a6c87;text-transform:uppercase;letter-spacing:.04em}
+        .k .v{font-size:18px;font-weight:700;margin-top:4px}
+        .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .box{background:#fff;border:1px solid #d8e5f9;border-radius:12px;padding:10px}
+        .box h3{margin:0 0 8px 0;font-size:14px}
+        .box img{max-width:100%;border-radius:8px;border:1px solid #e4ecf8}
+        table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #d8e5f9;border-radius:12px;overflow:hidden}
+        th,td{padding:8px;border-bottom:1px solid #e6eefb;font-size:12px;text-align:left;vertical-align:top}
+        th{background:#ecf4ff;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+        .mt{margin-top:14px}
+        .sign{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px}
+        .sign-box{background:#fff;border:1px solid #d8e5f9;border-radius:12px;padding:14px;min-height:90px}
+        .line{margin-top:30px;border-top:1px solid #9fb4d3;padding-top:6px;font-size:12px;color:#415878}
+        @media print{body{padding:0} .head{border-radius:0}}
+      </style>`;
+    }
+    function buildReportHtml(){
+      const now = new Date().toLocaleString();
+      const chartA = el.chartCategory && el.chartCategory.toDataURL ? el.chartCategory.toDataURL("image/png") : "";
+      const chartB = el.chartTimeline && el.chartTimeline.toDataURL ? el.chartTimeline.toDataURL("image/png") : "";
+      const headers=[...state.headers,"Estado","Nota","ActualizadoPor","ActualizadoEn","RowId"];
+      const reportInstitution = localStorage.getItem("forms_report_institution") || "Universidad de Panama";
+      const reportTitle = localStorage.getItem("forms_report_title") || "Reporte Interactivo de Respuestas";
+      const reportLogo = localStorage.getItem("forms_report_logo") || "";
+      let rowsHtml="";
+      state.filteredRows.forEach(r=>{
+        const vals=[...r.cells,r.meta.status,r.meta.note,r.meta.updatedBy,r.meta.updatedAt,r.rowId];
+        rowsHtml += "<tr>"+vals.map(v=>`<td>${esc(v)}</td>`).join("")+"</tr>";
+      });
+      const hCols = headers.map(h=>`<th>${esc(h)}</th>`).join("");
+      return `<!doctype html><html><head><meta charset="utf-8"><title>Reporte Forms</title>${reportStyles()}</head><body>
+      <section class="cover">
+        ${reportLogo ? `<img class="logo" src="${reportLogo}" alt="Logo">` : ""}
+        <div class="inst">${esc(reportInstitution)}</div>
+        <div class="rep-title">${esc(reportTitle)}</div>
+      </section>
+      <section class="head">
+        <h1 style="margin:0;font-size:22px;">Reporte de Google Forms</h1>
+        <div class="sub">Generado: ${esc(now)} | Usuario: ${esc(state.user || "usuario")} | Rol: ${esc(state.role)}</div>
+      </section>
+      <section class="grid">
+        <article class="k"><div class="t">Total BD</div><div class="v">${esc(el.kpiTotal.textContent)}</div></article>
+        <article class="k"><div class="t">Visibles</div><div class="v">${esc(el.kpiVisible.textContent)}</div></article>
+        <article class="k"><div class="t">Pendientes</div><div class="v">${esc(el.kpiPendiente.textContent)}</div></article>
+        <article class="k"><div class="t">Aprobados</div><div class="v">${esc(el.kpiAprobado.textContent)}</div></article>
+      </section>
+      <section class="charts">
+        <article class="box"><h3>Grafico por pregunta</h3>${chartA ? `<img src="${chartA}" alt="Grafico 1">` : "<div>Sin grafico</div>"}</article>
+        <article class="box"><h3>Respuestas por dia</h3>${chartB ? `<img src="${chartB}" alt="Grafico 2">` : "<div>Sin grafico</div>"}</article>
+      </section>
+      <section class="mt box">
+        <h3 style="margin:0 0 8px 0;">Datos filtrados (${state.filteredRows.length})</h3>
+        <table><thead><tr>${hCols}</tr></thead><tbody>${rowsHtml || `<tr><td colspan="${headers.length}">Sin datos</td></tr>`}</tbody></table>
+      </section>
+      <section class="sign">
+        <article class="sign-box">
+          <strong>Elaborado por</strong>
+          <div class="line">${esc(state.user || "Usuario del sistema")}</div>
+        </article>
+        <article class="sign-box">
+          <strong>Fecha de emision</strong>
+          <div class="line">${esc(now)}</div>
+        </article>
+      </section>
+      </body></html>`;
+    }
+    function exportXls(){
+      const html = buildReportHtml();
+      downloadBlob("application/vnd.ms-excel","reporte_forms_visual.xls",html);
+    }
+    function exportPdf(){
+      const html = buildReportHtml();
+      const w = window.open("", "_blank");
+      if(!w){ showToast("Permite ventanas emergentes para exportar PDF."); return; }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(()=>w.print(), 500);
+    }
+
+    function boot(){
+      const savedTheme = localStorage.getItem(STORE.theme);
+      const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      applyTheme(savedTheme || (systemDark ? "dark" : "light"));
+      state.apiUrl=localStorage.getItem(STORE.apiUrl)||"";
+      state.token=localStorage.getItem(STORE.token)||"";
+      state.user=localStorage.getItem(STORE.user)||"";
+      state.pollMs=Math.max(2000,Number(localStorage.getItem(STORE.pollMs)||"10000"));
+      el.apiUrl.value=state.apiUrl; el.tokenInput.value=state.token; el.userName.value=state.user; el.pollMs.value=String(state.pollMs);
+      el.reportInstitution.value = localStorage.getItem("forms_report_institution") || "Universidad de Panama";
+      el.reportTitle.value = localStorage.getItem("forms_report_title") || "Reporte Interactivo de Respuestas";
+      el.reportLogo.value = localStorage.getItem("forms_report_logo") || "";
+      refreshPresetSelect(); updateSessionUi();
+      if(state.apiUrl&&state.token) verifyLogin();
+    }
+
+    el.loginBtn.addEventListener("click",verifyLogin);
+    el.saveUrlBtn.addEventListener("click",saveUrl);
+    el.syncBtn.addEventListener("click",async()=>{ await fetchData(); await fetchAudit(); });
+    el.globalSearch.addEventListener("input",()=>applyFilters(true)); el.columnSelect.addEventListener("change",()=>applyFilters(true)); el.columnValue.addEventListener("input",()=>applyFilters(true)); el.fromDate.addEventListener("change",()=>applyFilters(true)); el.toDate.addEventListener("change",()=>applyFilters(true)); el.onlyEmptyChk.addEventListener("change",()=>applyFilters(true));
+    el.clearFiltersBtn.addEventListener("click",clearFilters); el.savePresetBtn.addEventListener("click",savePreset); el.applyPresetBtn.addEventListener("click",applyPreset); el.deletePresetBtn.addEventListener("click",deletePreset);
+    el.chartColumn.addEventListener("change",renderCharts);
+    el.pageSize.addEventListener("change",()=>{ state.pageSize=Number(el.pageSize.value||20); state.page=1; renderPage(); });
+    el.prevBtn.addEventListener("click",()=>{ state.page-=1; renderPage(); }); el.nextBtn.addEventListener("click",()=>{ state.page+=1; renderPage(); });
+    el.closeModalBtn.addEventListener("click",closeDetail); el.detailModal.addEventListener("click",ev=>{ if(ev.target===el.detailModal) closeDetail(); }); el.saveMetaBtn.addEventListener("click",saveMeta);
+    el.saveSettingsBtn.addEventListener("click",saveSettings);
+    el.saveReportConfigBtn.addEventListener("click",saveReportConfig);
+    el.exportCsvBtn.addEventListener("click",exportCsv); el.exportXlsBtn.addEventListener("click",exportXls); el.exportPdfBtn.addEventListener("click",exportPdf);
+    el.themeToggleBtn.addEventListener("click",toggleTheme);
+    document.addEventListener("keydown",(ev)=>{
+      const tag=(ev.target&&ev.target.tagName)?ev.target.tagName.toLowerCase():"";
+      const typing=tag==="input"||tag==="textarea"||tag==="select"||ev.target?.isContentEditable;
+      if(!typing && ev.key && ev.key.toLowerCase()==="t"){ ev.preventDefault(); toggleTheme(); }
+    });
+    boot();
+  </script>
+</body>
+</html>
